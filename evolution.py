@@ -17,7 +17,7 @@ class Evolution():
         random_number = np.random.uniform(0, 1, 1)
         if random_number < threshold:
             array += np.random.normal(size=array.shape)
-            
+
     def mutate(self, child):
 
         # TODO
@@ -125,6 +125,14 @@ class Evolution():
             case "roulette wheel":
                 return roulette_wheel_selection(players, num_players)
         }
+
+        # plotting
+        fitness_list = [player.fitness for player in players]
+        max_fitness = float(np.max(fitness_list))
+        mean_fitness = float(np.mean(fitness_list))
+        min_fitness = float(np.min(fitness_list))
+        self.save_fitness_result(min_fitness, max_fitness, mean_fitness)
+
 
     def roulette_wheel_selection(population, n):
     
