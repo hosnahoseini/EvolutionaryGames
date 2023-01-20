@@ -106,6 +106,45 @@ class Player():
         # agent_position example: [600, 250]
         # velocity example: 7
 
+        if len(box_lists) == 0:
+            distance_box0 = CONFIG['WIDTH']
+            distance_box1 = CONFIG['WIDTH']
+            box0_gap = CONFIG['HEIGHT'] / 2
+            box1_gap = CONFIG['HEIGHT'] / 2
+        elif len(box_lists) == 1:
+            distance_box0 = box_lists[0].x - agent_position[0]
+            box0_gap = box_lists[0].gap_mid - agent_position[1]
+            distance_box1 = CONFIG['WIDTH']
+            box1_gap = CONFIG['HEIGHT'] / 2
+        else:
+            distance_box0 = box_lists[0].x - agent_position[0]
+            box0_gap = box_lists[0].gap_mid - agent_position[1]
+            distance_box1 = box_lists[1].x - agent_position[0]
+            box1_gap = box_lists[1].gap_mid - agent_position[1]
+            
+        x = np.array(([distance_box0], [distance_box1], [box0_gap], [box1_gap], [velocity]))
+
+        # normalize
+        max_x = np.array(CONFIG['WIDTH'], CONFIG['WIDTH'], CONFIG['HEIGHT'], CONFIG['HEIGHT'], 10)
+        x = np.divide(x, max_x)
+        
+        outpust = self.nn.forward(x)
+
+        switch (mode){
+            case "Thrust":
+                if result > 0.66:
+                    direction = 1
+                elif result < 0.33:
+                    direction = -1
+                else:
+                    direction = 0
+            defualt:
+                if result > 0.5:
+                    direction = 1
+                else:
+                    direction = -1
+        }
+
         direction = -1
         return direction
 
