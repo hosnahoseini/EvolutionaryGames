@@ -2,11 +2,13 @@ from player import Player
 import numpy as np
 from config import CONFIG
 import copy as cp
+import json
 
 class Evolution():
 
     def __init__(self, mode):
         self.mode = mode
+        self.generation_cnt = 0
 
     # calculate fitness of players
     def calculate_fitness(self, players, delta_xs):
@@ -59,6 +61,17 @@ class Evolution():
         self.mutate(child2)
         return child1, child2
 
+    def roulette_wheel_selection(self, players, parent_numbers):
+        
+        # # Computes the totallity of the population fitness
+        population_fitness = sum([chromosome.fitness for chromosome in players])
+        
+        # Computes for each chromosome the probability 
+        probabilities = [chromosome.fitness / population_fitness for chromosome in players]
+        
+        # # Selects n chromosome based on the computed probabilities
+        return np.random.choice(players, parent_numbers, p=probabilities).tolist()
+
     def generate_new_population(self, num_players, prev_players=None):
 
         # in first generation, we create random players
@@ -86,7 +99,7 @@ class Evolution():
                 prev_players = sorted(prev_players, key=lambda x: x.fitness, reverse=True)
                 parents = prev_players[:num_players]
             elif method_choose_parents == "roulette wheel":
-                parents = roulette_wheel_selection(prev_players, num_players)
+                parents =self.roulette_wheel_selection(prev_players, num_players)
 
             if method_repopulate == "simple":
                 children = cp.deepcoopy(parents)
@@ -111,27 +124,37 @@ class Evolution():
         method = "roulette wheel"
         if method == "top-k":
             players = sorted(players, key=lambda x: x.fitness, reverse=True)
-            return players[: num_players]
+            res = players[: num_players]
         elif method == "roulette wheel":
-            res = roulette_wheel_selection(players, num_players)
-            return res
-        
+            res = self.roulette_wheel_selection(players, num_players)
 
         # plotting
         fitness_list = [player.fitness for player in players]
         max_fitness = float(np.max(fitness_list))
         mean_fitness = float(np.mean(fitness_list))
         min_fitness = float(np.min(fitness_list))
-        save_result(min_fitness, max_fitness, mean_fitness)
+        self.save_result(min_fitness, max_fitness, mean_fitness)
 
+        return res
 
-def roulette_wheel_selection(players, parent_numbers):
-    
-    # # Computes the totallity of the population fitness
-    population_fitness = sum([chromosome.fitness for chromosome in players])
-    
-    # Computes for each chromosome the probability 
-    probabilities = [chromosome.fitness / population_fitness for chromosome in players]
-    
-    # # Selects n chromosome based on the computed probabilities
-    return np.random.choice(players, parent_numbers, p=probabilities).tolist()
+    def save_result(self, min_fitness, max_fitness, mean_fitness):
+            if self.generation_cnt == 0:
+                fitness_results = {
+                    'min_fitness': [min_fitness],
+                    'max_fitness': [max_fitness],
+                    'mean_fitness': [mean_fitness]
+                }
+                with open('fitness_data.json', 'w') as out_file:
+                    json.dump(fitness_results, out_file)
+            else:
+                with open('fitness_data.json', 'r') as in_file:
+                    fitness_results = json.load(in_file)
+
+                fitness_results['min_fitness'].append(min_fitness)
+                fitness_results['max_fitness'].append(max_fitness)
+                fitness_results['mean_fitness'].append(mean_fitness)
+
+                with open('fitness_data.json', 'w') as out_file:
+                    json.dump(fitness_results, out_file)
+
+            self.generation_cnt += 1
