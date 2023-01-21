@@ -90,11 +90,11 @@ class Player():
 
         layer_sizes = None
         if mode == 'gravity':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif mode == 'helicopter':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         elif mode == 'thrust':
-            layer_sizes = [6, 20, 1]
+            layer_sizes = [5, 20, 1]
         return layer_sizes
 
     
@@ -107,45 +107,41 @@ class Player():
         # velocity example: 7
 
         if len(box_lists) == 0:
-            distance_box0 = CONFIG['WIDTH']
-            distance_box1 = CONFIG['WIDTH']
-            box0_gap = CONFIG['HEIGHT'] / 2
-            box1_gap = CONFIG['HEIGHT'] / 2
+            x_distance_box_1 = CONFIG['WIDTH']
+            x_distance_box_2 = CONFIG['WIDTH']
+            y_distance_box_1 = CONFIG['HEIGHT'] / 2
+            y_distance_box_2 = CONFIG['HEIGHT'] / 2
         elif len(box_lists) == 1:
-            distance_box0 = box_lists[0].x - agent_position[0]
-            box0_gap = box_lists[0].gap_mid - agent_position[1]
-            distance_box1 = CONFIG['WIDTH']
-            box1_gap = CONFIG['HEIGHT'] / 2
+            x_distance_box_1 = box_lists[0].x - agent_position[0]
+            y_distance_box_1 = box_lists[0].gap_mid - agent_position[1]
+            x_distance_box_2 = CONFIG['WIDTH']
+            y_distance_box_2 = CONFIG['HEIGHT'] / 2
         else:
-            distance_box0 = box_lists[0].x - agent_position[0]
-            box0_gap = box_lists[0].gap_mid - agent_position[1]
-            distance_box1 = box_lists[1].x - agent_position[0]
-            box1_gap = box_lists[1].gap_mid - agent_position[1]
+            x_distance_box_1 = box_lists[0].x - agent_position[0]
+            y_distance_box_1 = box_lists[0].gap_mid - agent_position[1]
+            x_distance_box_2 = box_lists[1].x - agent_position[0]
+            y_distance_box_2 = box_lists[1].gap_mid - agent_position[1]
             
-        x = np.array(([distance_box0], [distance_box1], [box0_gap], [box1_gap], [velocity]))
+        x = np.array(([x_distance_box_1], [x_distance_box_2], [y_distance_box_1], [y_distance_box_2], [velocity]))
 
         # normalize
-        max_x = np.array(CONFIG['WIDTH'], CONFIG['WIDTH'], CONFIG['HEIGHT'], CONFIG['HEIGHT'], 10)
+        max_x = np.array(([CONFIG['WIDTH']], [CONFIG['WIDTH']], [CONFIG['HEIGHT']], [CONFIG['HEIGHT']], [10]))
         x = np.divide(x, max_x)
-        
-        outpust = self.nn.forward(x)
+        output = self.nn.forward(x)
 
-        switch (mode){
-            case "Thrust":
-                if result > 0.66:
-                    direction = 1
-                elif result < 0.33:
-                    direction = -1
-                else:
-                    direction = 0
-            defualt:
-                if result > 0.5:
-                    direction = 1
-                else:
-                    direction = -1
-        }
+        if  mode == "Thrust":
+            if output > 0.66:
+                direction = 1
+            elif output < 0.33:
+                direction = -1
+            else:
+                direction = 0
+        else:
+            if output > 0.5:
+                direction = 1
+            else:
+                direction = -1
 
-        direction = -1
         return direction
 
     def collision_detection(self, mode, box_lists, camera):

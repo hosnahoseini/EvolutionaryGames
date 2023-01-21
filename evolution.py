@@ -1,7 +1,7 @@
 from player import Player
 import numpy as np
 from config import CONFIG
-
+import copy as cp
 
 class Evolution():
 
@@ -13,7 +13,8 @@ class Evolution():
         for i, p in enumerate(players):
             p.fitness = delta_xs[i]
 
-    def add_gaussian_noise(self, array, threshold):
+    def add_gaussian_noise(self, array):
+        threshold = 0.2
         random_number = np.random.uniform(0, 1, 1)
         if random_number < threshold:
             array += np.random.normal(size=array.shape)
@@ -22,12 +23,10 @@ class Evolution():
 
         # TODO
         # child: an object of class `Player`
-        threshold = 0.2
-
-        self.add_gaussian_noise(child.nn.W1, threshold)
-        self.add_gaussian_noise(child.nn.W2, threshold)
-        self.add_gaussian_noise(child.nn.b1, threshold)
-        self.add_gaussian_noise(child.nn.b2, threshold)
+        self.add_gaussian_noise(child.nn.W1)
+        self.add_gaussian_noise(child.nn.W2)
+        self.add_gaussian_noise(child.nn.b1)
+        self.add_gaussian_noise(child.nn.b2)
 
     def crossover(self, child1_array, child2_array, parent1_array, parent2_array):
         row_size, column_size = child1_array.shape
@@ -80,32 +79,24 @@ class Evolution():
             # prev_players: an array of `Player` objects
             method_choose_parents = "roulette wheel"
             method_repopulate = "crossover"
-            children = []
-            parents = []
+            children = None
+            parents = None
 
-            method = "top-k"
-            switch(method_choose_parents){
-                case "top-k":
-                    players.sort(players, key=lambda x: x.fitness, reverse=True)
-                    parents = players[:num_players]
-                    break
-                case "roulette wheel":
-                    parents = roulette_wheel_selection(players, num_players)
-                    break
-            }
+            if method_choose_parents == "top-k":
+                prev_players = sorted(prev_players, key=lambda x: x.fitness, reverse=True)
+                parents = prev_players[:num_players]
+            elif method_choose_parents == "roulette wheel":
+                parents = roulette_wheel_selection(prev_players, num_players)
 
-            switch(method_repopulate){
-                case "simple":
-                    children = cp.deepcoopy(parents)
-                    children = map(lambda child: elf.mutate(child), children)
-                    break;
-                case "crossover":
-                    for i in range(0, len(parents), 2):
-                        child1, child2 = self.reproduction(parents[i], parents[i + 1])
-                        children.append(child1)
-                        children.append(child2)
-                    break;
-            }
+            if method_repopulate == "simple":
+                children = cp.deepcoopy(parents)
+                children = map(lambda child: self.mutate(child), children)
+            elif method_repopulate == "crossover":
+                children = []
+                for i in range(0, len(parents) - 1, 2):
+                    child1, child2 = self.reproduction(parents[i], parents[i + 1])
+                    children.append(child1)
+                    children.append(child2)
             
             return children
 
@@ -117,30 +108,30 @@ class Evolution():
 
         # TODO (additional): a selection method other than `top-k`
         # TODO (additional): plotting
-        method = "top-k"
-        switch(method){
-            case "top-k":
-                players.sort(players, key=lambda x: x.fitness, reverse=True)
-                return players[: num_players]
-            case "roulette wheel":
-                return roulette_wheel_selection(players, num_players)
-        }
+        method = "roulette wheel"
+        if method == "top-k":
+            players = sorted(players, key=lambda x: x.fitness, reverse=True)
+            return players[: num_players]
+        elif method == "roulette wheel":
+            res = roulette_wheel_selection(players, num_players)
+            return res
+        
 
         # plotting
         fitness_list = [player.fitness for player in players]
         max_fitness = float(np.max(fitness_list))
         mean_fitness = float(np.mean(fitness_list))
         min_fitness = float(np.min(fitness_list))
-        self.save_fitness_result(min_fitness, max_fitness, mean_fitness)
+        save_result(min_fitness, max_fitness, mean_fitness)
 
 
-    def roulette_wheel_selection(population, n):
+def roulette_wheel_selection(players, parent_numbers):
     
-        # Computes the totallity of the population fitness
-        population_fitness = sum([chromosome.fitness for chromosome in population])
-        
-        # Computes for each chromosome the probability 
-        chromosome_probabilities = [chromosome.fitness / population_fitness for chromosome in population]
-        
-        # Selects one chromosome based on the computed probabilities
-        return np.random.choice(population, n, p=chromosome_probabilities), 
+    # # Computes the totallity of the population fitness
+    population_fitness = sum([chromosome.fitness for chromosome in players])
+    
+    # Computes for each chromosome the probability 
+    probabilities = [chromosome.fitness / population_fitness for chromosome in players]
+    
+    # # Selects n chromosome based on the computed probabilities
+    return np.random.choice(players, parent_numbers, p=probabilities).tolist()
