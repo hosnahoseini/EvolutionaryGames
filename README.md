@@ -6,7 +6,7 @@ The agent needs to learn to maneuver via neural network + evolution.
 
 This project is an implementation of an Evolutionary Games intelligent agent using neural network and evolution algorithm. The agent is able to learn to play a variety of one-player games, by evolving a population of neural networks that adapt to the game dynamics over time.
 
-- detailed instruction of project is available in `Evaluation Project.pdf`.
+- detailed instruction of project is available in `Evolution Project.pdf`.
 
 ## Game Modes
 Helicopter             |  Gravity          |  Thrust
